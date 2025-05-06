@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generador de Equipos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes teamIn{from{opacity:0;transform:scale(0.9);}to{opacity:1;transform:scale(1);}}
+    @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.02);}100%{transform:scale(1);}}
+    .teams.updating{animation:pulse 0.4s ease;}
+    :root { --primary:#4F46E5; --secondary:#E0E7FF; --bg:#F9FAFB; --text:#111827; --card:#FFFFFF; --radius:1rem; --transition:0.3s ease; --star:#f59e0b; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding:2rem;}
+    h1{text-align:center;margin-bottom:0.5rem;font-weight:700;font-size:2.25rem;}
+    .subtitle{text-align:center;font-size:1rem;color:#6B7280;margin-bottom:2rem;}
+    .tabs{display:flex;justify-content:center;gap:1rem;margin-bottom:1.5rem;}
+    .tab{padding:0.75rem 1.5rem;background:var(--secondary);border-radius:var(--radius);cursor:pointer;font-weight:600;font-size:1rem;transition:background var(--transition),transform var(--transition);}
+    .tab:hover{background:#D1D5DB;transform:translateY(-1px);}
+    .tab.active{background:var(--primary);color:#fff;transform:translateY(-3px);box-shadow:0 6px 12px rgba(0,0,0,0.1);}
+    .panel{display:none;background:rgba(255,255,255,0.8);backdrop-filter:blur(8px);padding:2rem;border-radius:var(--radius);box-shadow:0 4px 8px rgba(0,0,0,0.05);animation:fadeIn var(--transition) both;}
+    .panel.active{display:block;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes slideOut{to{opacity:0;transform:translateX(20px);height:0;margin:0;padding:0;}}
+    .instruction{font-size:0.9rem;color:#6B7280;margin-bottom:1rem;line-height:1.4;}
+    label{display:block;margin:1rem 0 0.5rem;font-weight:700;font-size:1.1rem;}
+    textarea,input[type=number],.pname{width:100%;padding:0.75rem;border:1px solid #D1D5DB;border-radius:var(--radius);font-size:1rem;transition:border-color var(--transition),box-shadow var(--transition);}
+    textarea{resize:vertical;}
+    textarea:focus,input[type=number]:focus,.pname:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,0.2);outline:none;}
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      display: inline-block;
+      width: auto;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      margin: 1rem auto;
+    }
+    .btn:hover{background:#4338CA;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+    .teams{margin-top:1.5rem;display:grid;gap:1rem;}
+    @keyframes teamIn{from{opacity:0;transform:scale(0.9);}to{opacity:1;transform:scale(1);}}
+    .team{background:var(--secondary);padding:1rem;border-radius:var(--radius);animation:teamIn 0.4s var(--transition);}
+    .team h3{margin-bottom:0.5rem;font-size:1.2rem;}
+    .team ul{list-style:disc inside;padding-left:1rem;margin:0;line-height:1.5;}
+    .participant-list{display:flex;flex-direction:column;gap:1rem;}
+    .participant{display:grid;grid-template-columns:auto 1fr auto auto;grid-template-areas:'del name slider rating';align-items:center;gap:0.75rem;background:var(--card);padding:0.5rem;border-radius:var(--radius);position:relative;}
+    .participant.removing{animation:slideOut var(--transition) both;}
+    .delete-btn{grid-area:del;background:rgba(239,68,68,0.1);border:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#EF4444;border-radius:0.5rem;transition:background var(--transition),transform var(--transition);}
+    .delete-btn:hover{background:rgba(239,68,68,0.2);transform:scale(1.1);}
+    .delete-btn:active{transform:scale(0.9);}
+    .pname{grid-area:name;height:2.5rem;}
+    .rating-input{grid-area:slider;appearance:none;width:100%;height:8px;border-radius:4px;background:#ddd;outline:none;transition:background var(--transition);margin:0;}
+    .rating-input::-webkit-slider-runnable-track,.rating-input::-moz-range-track{height:8px;border-radius:4px;}
+    .rating-input::-webkit-slider-thumb{appearance:none;margin-top:-4px;width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer;transition:background var(--transition),transform var(--transition);}
+    .rating-input:hover::-webkit-slider-thumb{background:#4338CA;transform:scale(1.1);}
+    .rating-input::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer;transition:background var(--transition),transform var(--transition);}
+    .rating-input:hover::-moz-range-thumb{background:#4338CA;transform:scale(1.1);}
+    .rating-display{grid-area:rating;font-size:1.5rem;font-weight:700;color:var(--star);text-align:right;min-width:3em;}
+  </style>
+</head>
+<body>
+  <h1>Generador de Equipos</h1>
+  <p class="subtitle">Crea equipos de manera fácil: elige entre reparto aleatorio o balanceado según valoraciones.</p>
+  <div class="tabs">
+    <div class="tab active" data-tab="random">Selección Aleatoria</div>
+    <div class="tab" data-tab="balanced">Equipos Balanceados</div>
+  </div>
+  <div id="random" class="panel active">
+    <p class="instruction"><strong>Instrucciones:</strong> Escribe cada participante en una línea y selecciona cuántos equipos deseas.</p>
+    <label for="namesRandom">Participantes:</label>
+    <textarea id="namesRandom" rows="6" placeholder="Ej:
+María
+Juan
+Ana
+Pedro
+Lucía"></textarea>
+    <label for="numTeamsRandom">Número de equipos:</label>
+    <input type="number" id="numTeamsRandom" min="2" value="2"/>
+    <button class="btn" onclick="generateRandom()">Crear Equipos</button>
+    <div id="resultRandom" class="teams"></div>
+  </div>
+  <div id="balanced" class="panel">
+    <p class="instruction"><strong>Instrucciones:</strong> Añade participantes con su valoración (0–5★). Pulsa Enter para añadir más.</p>
+    <div class="participant-list" id="participantsList"></div>
+    <button class="btn" onclick="addParticipant()">＋ Añadir participante</button>
+    <label for="numTeamsBalanced">Número de equipos:</label>
+    <input type="number" id="numTeamsBalanced" min="2" value="2"/>
+    <button class="btn" onclick="generateBalanced()">Crear Equipos Balanceados</button>
+    <div id="resultBalanced" class="teams"></div>
+  </div>
+  <script>
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab, .panel').forEach(el => el.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Shuffle helper
+    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+
+    // Generate Random Teams
+    function generateRandom() {
+      const names = document.getElementById('namesRandom').value
+        .split('\n')
+        .map(n => n.trim())
+        .filter(Boolean);
+      const k = +document.getElementById('numTeamsRandom').value;
+      if (names.length < k) return alert('Más equipos que participantes');
+      const teams = Array.from({ length: k }, () => []);
+      shuffle(names).forEach((n, i) => teams[i % k].push(n));
+      const out = document.getElementById('resultRandom');
+      out.innerHTML = '';
+      teams.forEach((t, i) => {
+        out.innerHTML += `
+          <div class="team">
+            <h3>Equipo ${i + 1}</h3>
+            <ul>
+              ${t.map(m => `<li>${m}</li>`).join('')}
+            </ul>
+          </div>`;
+      });
+    }
+
+    // Add Participant
+    function addParticipant() {
+      const list = document.getElementById('participantsList');
+      const div = document.createElement('div');
+      div.className = 'participant';
+      div.innerHTML = `
+        <button class="delete-btn" onclick="deleteParticipant(this)">✕</button>
+        <input type="text" class="pname" placeholder="Nombre" />
+        <input type="range" class="rating-input" min="0" max="5" step="0.5" value="2.5" />
+        <span class="rating-display">2.5★</span>
+      `;
+      list.appendChild(div);
+      const inp = div.querySelector('.pname');
+      inp.focus();
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addParticipant(); } });
+
+      const sl = div.querySelector('.rating-input');
+      const disp = div.querySelector('.rating-display');
+      const upd = () => {
+        const v = sl.value;
+        disp.textContent = v + '★';
+        const p = (v - sl.min) / (sl.max - sl.min) * 100;
+        sl.style.background = `linear-gradient(90deg, var(--primary) ${p}%, #ddd ${p}%)`;
+      };
+      sl.addEventListener('input', upd);
+      upd();
+    }
+
+    // Delete Participant
+    function deleteParticipant(btn) {
+      const item = btn.closest('.participant');
+      item.classList.add('removing');
+      item.addEventListener('animationend', () => item.remove());
+    }
+
+    // Initialize one participant row
+    addParticipant();
+
+    // Generate Balanced Teams
+    function generateBalanced() {
+      const parts = [...document.querySelectorAll('.participant')].map(div => ({
+        name: div.querySelector('.pname').value.trim(),
+        rating: +div.querySelector('.rating-input').value
+      })).filter(p => p.name);
+      const k = +document.getElementById('numTeamsBalanced').value;
+      if (parts.length < k) return alert('Más equipos que participantes');
+      const teams = Array.from({ length: k }, () => ({ members: [], sum: 0 }));
+      parts.sort((a, b) => b.rating - a.rating).forEach(p => {
+        teams.sort((a, b) => a.sum - b.sum);
+        teams[0].members.push(`${p.name} (${p.rating}★)`);
+        teams[0].sum += p.rating;
+      });
+      const out = document.getElementById('resultBalanced');
+      out.innerHTML = '';
+      teams.forEach((t, i) => {
+        out.innerHTML += `
+          <div class="team">
+            <h3>Equipo ${i + 1} — Suma: ${t.sum.toFixed(1)}★</h3>
+            <ul>
+              ${t.members.map(m => `<li>${m}</li>`).join('')}
+            </ul>
+          </div>`;
+      });
+    }
+  </script>
+</body>
+</html>
